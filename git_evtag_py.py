@@ -129,6 +129,19 @@ def sign_tree_checksum(
     os.unlink(tmp.name)
 
 
+def is_tag_signature_valid(repo: Path, tag: str) -> bool:
+    try:
+        subprocess.run(
+            ["git", "tag", "-v", tag],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+        )
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
 class ChecksumProcessor:
     def __init__(self) -> None:
         self.stats = {
@@ -338,12 +351,26 @@ def main() -> None:
         sign_tree_checksum(repo, args.sign, calculated_digest, args.compat)
     elif args.verify and tag_msg_checksum:
         matched = tag_msg_checksum == calculated_digest
-        if matched:
-            print("Checksums are successfully verified")  # noqa: T201
+        tag_sig = is_tag_signature_valid(repo, args.verify)
+        if matched and tag_sig:
+            print("Checksum and signature are successfully verified")  # noqa: T201
+        elif matched and not tag_sig:
+            print("Checksum was verified but not signature", file=sys.stderr)  # noqa: T201
+            sys.exit(1)
+        elif tag_sig and not matched:
+            print(  # noqa: T201
+                (
+                    "Signature was verified but not checksum"
+                    f"\nChecksum from tag message {tag_msg_checksum}"
+                    f"\nCalculated checksum of {args.verify} is {calculated_digest}"
+                ),
+                file=sys.stderr,
+            )
+            sys.exit(1)
         else:
             print(  # noqa: T201
                 (
-                    "Checksums did not match"
+                    "Checksums and signature verification failed"
                     f"\nChecksum from tag message {tag_msg_checksum}"
                     f"\nCalculated checksum of {args.verify} is {calculated_digest}"
                 ),
