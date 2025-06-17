@@ -333,6 +333,7 @@ def main() -> None:
 
     if args.verify or args.sign:
         tag = args.verify or args.sign
+        args.rev = ensure_git_rev(tag, repo)
 
     if args.verify:
         tag_msg_checksum = extract_checksum_from_tag(repo, tag)
