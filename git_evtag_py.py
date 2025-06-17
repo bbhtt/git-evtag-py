@@ -350,7 +350,13 @@ def main() -> None:
             print(f"Git-EVTag-Py-v0-SHA512: {calculated_digest}")  # noqa: T201
     elif args.sign:
         sign_tree_checksum(repo, args.sign, calculated_digest, args.compat)
-    elif args.verify and tag_msg_checksum:
+    elif args.verify:
+        if not tag_msg_checksum:
+            print(  # noqa: T201
+                "Checksum was not found from tag but '--verify' was passed",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         matched = tag_msg_checksum == calculated_digest
         tag_sig = is_tag_signature_valid(repo, args.verify)
         if matched and tag_sig:
