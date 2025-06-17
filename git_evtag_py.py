@@ -40,7 +40,6 @@ def ensure_submodules_init(repo: Path) -> None:
     subprocess.run(
         ["git", "submodule", "update", "--init", "--recursive", "--depth", "1"],
         cwd=repo,
-        env=GIT_ENV,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=True,
