@@ -14,8 +14,32 @@ This can,
 
 Install `git`.
 
-Symlink `git-evtag` to `~/.local/bin/git-evtag` or somewhere else that is in
-`$PATH`. Then,
+Symlink `git-evtag` to `~/.local/bin/git-evtag` or somewhere else that
+is in `$PATH`. Then,
+
+```
+# Show tree checksum of HEAD
+git evtag
+
+# Show tree checksum of tag TAG
+git evtag --rev TAG
+
+# Show tree checksum of commit COMMIT
+git evtag --rev COMMIT
+
+# Verify checksum obtained from tag message of tag TAG against the
+# one calculated. Also verifies signature of TAG
+git evtag --verify TAG
+
+# Add tree checksum to the tag TAG. Preserves the message of the
+# original tag TAG, creates a new tag TAG with the previous message and
+# the checksum appended to it
+git evtag --sign TAG
+
+# Produces 'Git-EVTag-v0-SHA512' prefixed output
+git evtag --compat
+git evtag --compat --sign TAG
+```
 
 ```sh
 $ git evtag -h
