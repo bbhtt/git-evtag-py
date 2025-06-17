@@ -1,0 +1,88 @@
+[project]
+name = "git_evtag_py"
+version = "1.0.0"
+description = "A python script version of git-evtag"
+authors = [
+  {name = "bbhtt", email = "bbhtt@bbhtt.space"},
+]
+license = {text = "LGPL-2.0-or-later"}
+readme = "README.md"
+requires-python = "<4.0,>=3.10"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/bbhtt/git-evtag-py"
+Repository = "https://github.com/bbhtt/git-evtag-py.git"
+
+[dependency-groups]
+dev = [
+    "pre-commit<4.0.0,>=3.8.0",
+    "mypy<2.0.0,>=1.11.2",
+    "ruff<1.0.0,>=0.6.7",
+]
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+extra_checks = true
+no_implicit_optional = true
+no_implicit_reexport = true
+show_error_codes = true
+strict = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[tool.ruff]
+line-length = 88
+include = ["*.py"]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+  "A",
+  "ARG",
+  "B",
+  "C4",
+  "DTZ",
+  "E",
+  "ERA",
+  "F",
+  "I",
+  "ICN",
+  "PIE",
+  "PL",
+  "Q",
+  "RET",
+  "RSE",
+  "RUF",
+  "S",
+  "SIM",
+  "T201",
+  "UP",
+  "W",
+]
+
+ignore = [
+  "PLR2004",
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
+  "S105",
+  "S320",
+  "S607",
+  "S603",
+]
+
+[tool.ruff.format]
+line-ending = "lf"
+quote-style = "double"
