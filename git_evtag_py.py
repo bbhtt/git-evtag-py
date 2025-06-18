@@ -38,7 +38,17 @@ def is_git_directory(path: Path) -> bool:
 
 def ensure_submodules_init(repo: Path) -> None:
     subprocess.run(
-        ["git", "submodule", "update", "--init", "--recursive", "--depth", "1"],
+        [
+            "git",
+            "-c",
+            "credential.interactive=false",
+            "submodule",
+            "update",
+            "--init",
+            "--recursive",
+            "--depth",
+            "1",
+        ],
         cwd=repo,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
