@@ -1,14 +1,13 @@
 ### git_evtag_py
 
-A python script version of [git-evtag](https://github.com/cgwalters/git-evtag/),
+A Python implementation of [git-evtag](https://github.com/cgwalters/git-evtag/),
 inspired by the [upstream Python implementation](https://github.com/cgwalters/git-evtag/blob/7c58b2021a066f1e552deeb37431bc70b6215d62/src/git-evtag-compute-py) but more feature complete and faster.
 
 This can,
 
-- Calculate and show checksum
-- Verify checksum of a tag against the one in the tag message
-- Sign a tag with the checksum
-
+- Calculate and show the EVTag checksum of tags and commits
+- Verify the signature and the EVTag checksum of a tag
+- Sign a tag with the EVTag checksum
 
 ### Usage
 
@@ -17,23 +16,23 @@ Install `git`.
 Symlink `git-evtag` to `~/.local/bin/git-evtag` or somewhere else that
 is in `$PATH`. Then,
 
-```
-# Show tree checksum of HEAD
+```sh
+# Show the EVTag checksum of HEAD
 git evtag
 
-# Show tree checksum of tag TAG
+# Show the EVTag checksum of the tag 'TAG'
 git evtag --rev TAG
 
-# Show tree checksum of commit COMMIT
+# Show the EVTag checksum of the commit 'COMMIT'
 git evtag --rev COMMIT
 
-# Verify checksum obtained from tag message of tag TAG against the
-# one calculated. Also verifies signature of TAG
+# Verify the signature and the EVTag checksum obtained from the tag
+# message of the tag 'TAG' against the one calculated
 git evtag --verify TAG
 
-# Add tree checksum to the tag TAG. Preserves the message of the
-# original tag TAG, creates a new tag TAG with the previous message and
-# the checksum appended to it
+# Add the EVTag checksum to the tag 'TAG'. Preserves the message of the
+# original tag 'TAG', creates a new tag 'TAG' with the previous message
+# and the EVTag checksum appended to it
 git evtag --sign TAG
 
 # Produces 'Git-EVTag-v0-SHA512' prefixed output
