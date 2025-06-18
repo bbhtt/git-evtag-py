@@ -366,15 +366,13 @@ def validate_args(args: argparse.Namespace) -> bool:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Tree checksum of a git repository")
+    parser = argparse.ArgumentParser(description="EVTag checksum of a git repository")
     parser.add_argument("--rev", help="Git revision (default: HEAD)")
     parser.add_argument(
-        "--repo", default=".", help="Path to the git repository (default: current dir)"
+        "--repo", default=".", help="Path to the git repository (default: PWD)"
     )
-    parser.add_argument(
-        "--verify", help="Verify the tree checksum from the input tag message"
-    )
-    parser.add_argument("--sign", help="Sign the input tag with the tree checksum")
+    parser.add_argument("--verify", help="Verify the EVTag checksum of the input tag")
+    parser.add_argument("--sign", help="Sign the input tag with the EVTag checksum")
     parser.add_argument(
         "--compat",
         action="store_true",

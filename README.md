@@ -44,14 +44,14 @@ git evtag --compat --sign TAG
 $ git evtag -h
 usage: git-evtag [-h] [--rev REV] [--repo REPO] [--verify VERIFY] [--sign SIGN] [--compat]
 
-Tree checksum of a git repository
+EVTag checksum of a git repository
 
 options:
   -h, --help       show this help message and exit
   --rev REV        Git revision (default: HEAD)
-  --repo REPO      Path to the git repository (default: current dir)
-  --verify VERIFY  Verify the tree checksum from the input tag message
-  --sign SIGN      Sign the input tag with the tree checksum
+  --repo REPO      Path to the git repository (default: PWD)
+  --verify VERIFY  Verify the EVTag checksum of the input tag
+  --sign SIGN      Sign the input tag with the EVTag checksum
   --compat         Produce 'Git-EVTag-v0-SHA512' prefixed output
 ```
 
