@@ -5,14 +5,16 @@
 
 import argparse
 import hashlib
+import logging
 import os
 import re
 import subprocess
-import sys
 import tempfile
 import types
 from pathlib import Path
 from typing import IO, Self
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 GIT_ENV = {
     "GIT_CONFIG_GLOBAL": "/dev/null",
@@ -313,9 +315,59 @@ class GitProcessor:
             self.checksum_tree(batch_proc, path, tree_id)
 
 
-def main() -> None:
+def verify_tag(repo: Path, tag: str, tag_evtag_csum: str, calc_evtag_csum: str) -> bool:
+    matched = tag_evtag_csum == calc_evtag_csum
+    tag_sig = is_tag_signature_valid(repo, tag)
+    if matched and tag_sig:
+        logging.info(
+            "EVTag checksum and the tag signature were successfully "
+            "verified for the tag '%s'",
+            tag,
+        )
+        return True
+    if matched and not tag_sig:
+        logging.error(
+            "EVTag checksum was verified but failed to verify the "
+            "tag signature for the tag '%s'",
+            tag,
+        )
+    elif tag_sig and not matched:
+        logging.error(
+            "The tag signature for the tag '%s' was verified but failed "
+            "to verify the EVTag checksum.\n"
+            "Checksum from the tag message: %s\n"
+            "Calculated checksum: %s",
+            tag,
+            tag_evtag_csum,
+            calc_evtag_csum,
+        )
+    else:
+        logging.error(
+            "Failed to verify both the EVTag checksum and the tag signature "
+            "for the tag '%s'.\n"
+            "Checksum from the tag message: %s\n"
+            "Calculated checksum: %s",
+            tag,
+            tag_evtag_csum,
+            calc_evtag_csum,
+        )
+
+    return False
+
+
+def validate_args(args: argparse.Namespace) -> bool:
+    if sum(bool(x) for x in (args.verify, args.sign)) > 1:
+        logging.error("Cannot use '--verify' and '--sign' simultaneously")
+        return False
+    if args.rev and (args.verify or args.sign):
+        logging.error("'--rev' cannot be used with '--verify' or '--sign'")
+        return False
+    return True
+
+
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Tree checksum of a git repository")
-    parser.add_argument("--rev", default="HEAD", help="Git revision (default: HEAD)")
+    parser.add_argument("--rev", help="Git revision (default: HEAD)")
     parser.add_argument(
         "--repo", default=".", help="Path to the git repository (default: current dir)"
     )
@@ -328,74 +380,70 @@ def main() -> None:
         action="store_true",
         help="Produce 'Git-EVTag-v0-SHA512' prefixed output",
     )
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    if args.verify and args.sign:
-        raise Exception("'--verify' and '--sign' cannot be used simultaneously")
 
-    checksum = ChecksumProcessor()
+def main() -> int:
+    args = parse_args()
+    if not validate_args(args):
+        return 1
+
     repo = Path(args.repo).resolve()
     if not is_git_directory(repo):
-        raise Exception(f"{repo} is not a git repository")
+        logging.error("The path is not a git repository: '%s'", repo)
+        return 1
+
+    resolved_commit: str | None = None
+    in_tag: str | None = None
+    tag_evtag_csum: str | None = None
+    if not args.rev:
+        resolved_commit = ensure_git_rev("HEAD", repo)
+    if args.rev:
+        resolved_commit = ensure_git_rev(args.rev, repo)
+    if args.verify or args.sign:
+        in_tag = args.verify or args.sign
+        resolved_commit = ensure_git_rev(in_tag, repo)
+        if not in_tag:
+            logging.error("Failed to get the input tag")
+            return 1
+    if args.verify and in_tag:
+        tag_evtag_csum = extract_checksum_from_tag(repo, in_tag)
+        if not tag_evtag_csum:
+            logging.error(
+                "'--verify' was passed but did not find the EVTag "
+                "checksum from the tag '%s'",
+                in_tag,
+            )
+            return 1
+    if not resolved_commit:
+        logging.error("Failed to calculate the resolved commit from the input")
+        return 1
+
+    checksum = ChecksumProcessor()
     ensure_submodules_init(repo)
     processor = GitProcessor(repo, checksum)
-
-    args.rev = ensure_git_rev(args.rev, repo)
-
-    if args.verify or args.sign:
-        tag = args.verify or args.sign
-        args.rev = ensure_git_rev(tag, repo)
-
-    if args.verify:
-        tag_msg_checksum = extract_checksum_from_tag(repo, tag)
-
     with GitBatchProcessor(repo) as batch_proc:
-        processor.checksum_repo(batch_proc, args.rev, repo)
+        processor.checksum_repo(batch_proc, resolved_commit, repo)
 
-    calculated_digest = checksum.get_digest()
+    calc_evtag_csum = checksum.get_digest()
 
     if not (args.verify or args.sign):
         if args.compat:
-            print(f"Git-EVTag-v0-SHA512: {calculated_digest}")  # noqa: T201
+            print(f"Git-EVTag-v0-SHA512: {calc_evtag_csum}")  # noqa: T201
         else:
-            print(f"Git-EVTag-Py-v0-SHA512: {calculated_digest}")  # noqa: T201
-    elif args.sign:
-        sign_tree_checksum(repo, args.sign, calculated_digest, args.compat)
-    elif args.verify:
-        if not tag_msg_checksum:
-            print(  # noqa: T201
-                "Checksum was not found from tag but '--verify' was passed",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        matched = tag_msg_checksum == calculated_digest
-        tag_sig = is_tag_signature_valid(repo, args.verify)
-        if matched and tag_sig:
-            print("Checksum and signature are successfully verified")  # noqa: T201
-        elif matched and not tag_sig:
-            print("Checksum was verified but not signature", file=sys.stderr)  # noqa: T201
-            sys.exit(1)
-        elif tag_sig and not matched:
-            print(  # noqa: T201
-                (
-                    "Signature was verified but not checksum"
-                    f"\nChecksum from tag message {tag_msg_checksum}"
-                    f"\nCalculated checksum of {args.verify} is {calculated_digest}"
-                ),
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        else:
-            print(  # noqa: T201
-                (
-                    "Checksums and signature verification failed"
-                    f"\nChecksum from tag message {tag_msg_checksum}"
-                    f"\nCalculated checksum of {args.verify} is {calculated_digest}"
-                ),
-                file=sys.stderr,
-            )
-            sys.exit(1)
+            print(f"Git-EVTag-Py-v0-SHA512: {calc_evtag_csum}")  # noqa: T201
+    elif args.sign and in_tag:
+        sign_tree_checksum(repo, in_tag, calc_evtag_csum, args.compat)
+    elif (
+        args.verify
+        and in_tag
+        and tag_evtag_csum
+        and not verify_tag(repo, in_tag, tag_evtag_csum, calc_evtag_csum)
+    ):
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
