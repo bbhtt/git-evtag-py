@@ -53,8 +53,7 @@ options:
   --repo REPO      Path to the git repository (default: current dir)
   --verify VERIFY  Verify the tree checksum from the input tag message
   --sign SIGN      Sign the input tag with the tree checksum
-  --compat         Produce 'git-evtag' upstream output
-
+  --compat         Produce 'Git-EVTag-v0-SHA512' prefixed output
 ```
 
 ### Development

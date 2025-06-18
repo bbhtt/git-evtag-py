@@ -326,7 +326,7 @@ def main() -> None:
     parser.add_argument(
         "--compat",
         action="store_true",
-        help="Produce 'git-evtag' upstream output",
+        help="Produce 'Git-EVTag-v0-SHA512' prefixed output",
     )
     args = parser.parse_args()
 
