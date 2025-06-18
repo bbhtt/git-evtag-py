@@ -49,7 +49,8 @@ def ensure_submodules_init(repo: Path) -> None:
 def ensure_git_rev(tag: str, path: Path) -> str:
     sha: str = (
         subprocess.check_output(
-            ["git", "-C", str(path), "rev-list", "-n", "1", tag],
+            ["git", "rev-list", "-n", "1", tag],
+            cwd=path,
             env=GIT_ENV,
         )
         .decode()
