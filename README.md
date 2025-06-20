@@ -35,7 +35,7 @@ git evtag --rev COMMIT
 git evtag --verify TAG
 
 # Create a signed and annotated tag 'TAG' from HEAD and append the EVTag
-checksum to it. Opens EDITOR for the tag message
+# checksum to it. Opens EDITOR for the tag message
 git evtag --sign TAG
 
 # Create a signed and annotated tag 'TAG' from HEAD and append the EVTag
@@ -81,7 +81,7 @@ uv run mypy .
 
 ### Performance
 
-On `torvalds/linux.git`, v6.15 tag:
+On `torvalds/linux.git` at the `v6.15` tag:
 
 ```sh
 # git_evtag_py
@@ -102,7 +102,7 @@ user 46.40
 sys 111.18
 ```
 
-On `mesa/mesa.git` at `mesa-25.0.0` tag:
+On `mesa/mesa.git` at the `mesa-25.0.0` tag:
 
 ```sh
 # git_evtag_py
