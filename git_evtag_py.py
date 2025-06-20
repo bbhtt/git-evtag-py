@@ -8,11 +8,11 @@
 import argparse
 import hashlib
 import logging
-import os
 import re
 import subprocess
 import tempfile
 import types
+from os import environ, unlink
 from pathlib import Path
 from typing import IO, Self
 
@@ -125,14 +125,14 @@ def sign_tree_checksum(
     elif tag_msg_file:
         message = Path(tag_msg_file).read_text()
     else:
-        editor = os.environ.get("EDITOR", "vi")
+        editor = environ.get("EDITOR", "vi")
         with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".tmp") as tmp:
             tmp.write("")
             tmp.flush()
             subprocess.run([editor, tmp.name], check=True)
             tmp.seek(0)
             message = tmp.read()
-        os.unlink(tmp.name)
+        unlink(tmp.name)
 
     pattern = (
         r"\n?Git-EVTag-v0-SHA512: .*\n?"
