@@ -448,7 +448,7 @@ def main() -> int:
                 in_tag,
             )
             return 1
-    if not (args.sign or resolved_commit):
+    if not resolved_commit:
         logging.error("Failed to calculate the resolved commit from the input")
         return 1
 
