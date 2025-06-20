@@ -84,7 +84,7 @@ On `torvalds/linux.git` at the `v6.15` tag:
 # git_evtag_py
 
 /bin/time -p git evtag
-Git-EVTag-Py-v0-SHA512: e7e3045a3f5b8f9cc538cc37a56143918306282f7200b9c860703bc839e0a7f4c59f36313d34e6ae9b825c2f77081dfe8e2d5f50f70030271ea17161e2e2fe83
+Git-EVTag-v0-SHA512: e7e3045a3f5b8f9cc538cc37a56143918306282f7200b9c860703bc839e0a7f4c59f36313d34e6ae9b825c2f77081dfe8e2d5f50f70030271ea17161e2e2fe83
 real 14.19
 user 8.60
 sys 7.21
@@ -105,7 +105,7 @@ On `mesa/mesa.git` at the `mesa-25.0.0` tag:
 # git_evtag_py
 
 /bin/time -p git evtag
-Git-EVTag-Py-v0-SHA512: b7a88cbca3c1257855404ab6f16b9efaf1e9b9304f46ad45a5d1a283808e40a96011e9321f0c6a8aacfe3a1be9c3cb971b9169ba21bd1d2ccfeb52041da0475b
+Git-EVTag-v0-SHA512: b7a88cbca3c1257855404ab6f16b9efaf1e9b9304f46ad45a5d1a283808e40a96011e9321f0c6a8aacfe3a1be9c3cb971b9169ba21bd1d2ccfeb52041da0475b
 real 1.93
 user 1.02
 sys 1.06
