@@ -34,10 +34,18 @@ git evtag --rev COMMIT
 # message of the tag 'TAG' against the one calculated
 git evtag --verify TAG
 
-# Add the EVTag checksum to the tag 'TAG'. Preserves the message of the
-# original tag 'TAG', creates a new tag 'TAG' with the previous message
-# and the EVTag checksum appended to it
+# Create a signed and annotated tag 'TAG' from HEAD and append the EVTag
+checksum to it. Opens EDITOR for the tag message
 git evtag --sign TAG
+
+# Create a signed and annotated tag 'TAG' from HEAD and append the EVTag
+# checksum to it. Uses 'Tag Message' as the tag message
+git evtag --sign TAG -m "Tag Message"
+
+# Create a signed and annotated tag 'TAG' from HEAD and append the EVTag
+# checksum to it. Uses the message from the file 'FILE' as the tag
+# message
+git evtag --sign TAG -F FILE
 
 # Produces 'Git-EVTag-v0-SHA512' prefixed output
 git evtag --compat
@@ -46,17 +54,21 @@ git evtag --compat --sign TAG
 
 ```sh
 $ git evtag -h
-usage: git-evtag [-h] [--rev REV] [--repo REPO] [--verify VERIFY] [--sign SIGN] [--compat]
+usage: git-evtag [-h] [--rev REV] [--repo REPO] [--verify VERIFY] [--sign SIGN] [--compat] [-m TAG_MESSAGE | -F TAG_MESSAGE_FILE]
 
 EVTag checksum of a git repository
 
 options:
-  -h, --help       show this help message and exit
-  --rev REV        Git revision (default: HEAD)
-  --repo REPO      Path to the git repository (default: PWD)
-  --verify VERIFY  Verify the EVTag checksum of the input tag
-  --sign SIGN      Sign the input tag with the EVTag checksum
-  --compat         Produce 'Git-EVTag-v0-SHA512' prefixed output
+  -h, --help            show this help message and exit
+  --rev REV             Git revision (default: HEAD)
+  --repo REPO           Path to the git repository (default: PWD)
+  --verify VERIFY       Verify the EVTag checksum of the input tag
+  --sign SIGN           Create a signed and annotated tag and append the EVTag checksum
+  --compat              Produce 'Git-EVTag-v0-SHA512' prefixed output
+  -m, --tag-message TAG_MESSAGE
+                        Use the input message as the tag message
+  -F, --tag-message-file TAG_MESSAGE_FILE
+                        Use the message from the input file as the tag message
 ```
 
 ### Development

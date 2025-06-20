@@ -95,53 +95,63 @@ def extract_checksum_from_tag(repo: Path, tag: str) -> str | None:
 
 
 def sign_tree_checksum(
-    repo: Path, tag: str, in_csum: str, compat: bool = False
+    repo: Path,
+    tag: str,
+    in_csum: str,
+    compat: bool = False,
+    tag_msg: str | None = None,
+    tag_msg_file: Path | None = None,
 ) -> None:
+    ret = subprocess.run(
+        ["git", "rev-parse", f"refs/tags/{tag}"],
+        check=False,
+        cwd=repo,
+        env=GIT_ENV,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if ret.returncode == 0:
+        raise RuntimeError(f"Tag '{tag}' already exists")
+
     commit = subprocess.check_output(
-        ["git", "rev-parse", f"{tag}^{{}}"],
+        ["git", "rev-parse", "HEAD"],
         text=True,
         cwd=repo,
         env=GIT_ENV,
     ).strip()
 
-    tag_msg = subprocess.check_output(
-        ["git", "for-each-ref", f"refs/tags/{tag}", "--format=%(contents)"],
-        text=True,
-        cwd=repo,
-        env=GIT_ENV,
-    )
+    if tag_msg:
+        message = tag_msg
+    elif tag_msg_file:
+        message = Path(tag_msg_file).read_text()
+    else:
+        editor = os.environ.get("EDITOR", "vi")
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".tmp") as tmp:
+            tmp.write("")
+            tmp.flush()
+            subprocess.run([editor, tmp.name], check=True)
+            tmp.seek(0)
+            message = tmp.read()
+        os.unlink(tmp.name)
 
     pattern = (
-        r"(?:\n?Git-EVTag-Py-v0-SHA512: .*\n?|"
-        r"\n?-----BEGIN PGP SIGNATURE-----.*?-----END PGP SIGNATURE-----\n?)"
+        r"\n?Git-EVTag-v0-SHA512: .*\n?"
+        if compat
+        else r"\n?Git-EVTag-Py-v0-SHA512: .*\n?"
     )
-
-    if compat:
-        pattern = pattern[:-1] + r"|\n?Git-EVTag-v0-SHA512: .*\n?)"
-
-    cleaned_msg = re.sub(pattern, "", tag_msg, flags=re.DOTALL)
-
-    editor = os.environ.get("EDITOR", "vi")
-    with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".tmp") as tmp:
-        tmp.write(cleaned_msg)
-        tmp.flush()
-        subprocess.run([editor, tmp.name], check=True)
-        tmp.seek(0)
-        edited_msg = tmp.read()
-
-    if compat:
-        footer = f"\n\nGit-EVTag-v0-SHA512: {in_csum}\n"
-    else:
-        footer = f"\n\nGit-EVTag-Py-v0-SHA512: {in_csum}\n"
-
-    final_msg = edited_msg.rstrip() + footer
+    cleaned_msg = re.sub(pattern, "", message, flags=re.DOTALL).rstrip()
+    footer = (
+        f"\n\nGit-EVTag-v0-SHA512: {in_csum}\n"
+        if compat
+        else f"\n\nGit-EVTag-Py-v0-SHA512: {in_csum}\n"
+    )
+    final_msg = cleaned_msg + footer
 
     subprocess.run(
-        ["git", "tag", tag, commit, "-f", "-m", final_msg],
+        ["git", "tag", "-a", "-s", tag, commit, "-m", final_msg],
         check=True,
         cwd=repo,
     )
-    os.unlink(tmp.name)
 
 
 def is_tag_signature_valid(repo: Path, tag: str) -> bool:
@@ -364,6 +374,14 @@ def validate_args(args: argparse.Namespace) -> bool:
     if args.rev and (args.verify or args.sign):
         logging.error("'--rev' cannot be used with '--verify' or '--sign'")
         return False
+    if (args.tag_message or args.tag_message_file) and not args.sign:
+        logging.error(
+            "'--tag-message' and '--tag-message-file' can only be used with '--sign'"
+        )
+        return False
+    if args.tag_message_file and not args.tag_message_file.exists():
+        logging.error("The tag message file does not exist '%s'", args.tag_message_file)
+        return False
     return True
 
 
@@ -374,11 +392,26 @@ def parse_args() -> argparse.Namespace:
         "--repo", default=".", help="Path to the git repository (default: PWD)"
     )
     parser.add_argument("--verify", help="Verify the EVTag checksum of the input tag")
-    parser.add_argument("--sign", help="Sign the input tag with the EVTag checksum")
+    parser.add_argument(
+        "--sign",
+        help=(
+            "Create a signed and annotated tag from HEAD and append the EVTag checksum"
+        ),
+    )
     parser.add_argument(
         "--compat",
         action="store_true",
         help="Produce 'Git-EVTag-v0-SHA512' prefixed output",
+    )
+    tag_msg = parser.add_mutually_exclusive_group()
+    tag_msg.add_argument(
+        "-m", "--tag-message", help="Use the input message as the tag message"
+    )
+    tag_msg.add_argument(
+        "-F",
+        "--tag-message-file",
+        type=Path,
+        help="Use the message from the input file as the tag message",
     )
     return parser.parse_args()
 
@@ -400,13 +433,13 @@ def main() -> int:
         resolved_commit = ensure_git_rev("HEAD", repo)
     if args.rev:
         resolved_commit = ensure_git_rev(args.rev, repo)
-    if args.verify or args.sign:
-        in_tag = args.verify or args.sign
-        resolved_commit = ensure_git_rev(in_tag, repo)
-        if not in_tag:
-            logging.error("Failed to get the input tag")
-            return 1
+    if args.sign or args.verify:
+        in_tag = args.sign or args.verify
+    if (args.verify or args.sign) and not in_tag:
+        logging.error("Failed to get the input tag")
+        return 1
     if args.verify and in_tag:
+        resolved_commit = ensure_git_rev(in_tag, repo)
         tag_evtag_csum = extract_checksum_from_tag(repo, in_tag)
         if not tag_evtag_csum:
             logging.error(
@@ -415,15 +448,19 @@ def main() -> int:
                 in_tag,
             )
             return 1
-    if not resolved_commit:
+    if not (args.sign or resolved_commit):
         logging.error("Failed to calculate the resolved commit from the input")
         return 1
 
-    checksum = ChecksumProcessor()
-    ensure_submodules_init(repo)
-    processor = GitProcessor(repo, checksum)
-    with GitBatchProcessor(repo) as batch_proc:
-        processor.checksum_repo(batch_proc, resolved_commit, repo)
+    if resolved_commit:
+        checksum = ChecksumProcessor()
+        ensure_submodules_init(repo)
+        processor = GitProcessor(repo, checksum)
+        with GitBatchProcessor(repo) as batch_proc:
+            processor.checksum_repo(batch_proc, resolved_commit, repo)
+    else:
+        logging.error("Failed to calculate the resolved commit from the input")
+        return 1
 
     calc_evtag_csum = checksum.get_digest()
 
@@ -433,7 +470,20 @@ def main() -> int:
         else:
             print(f"Git-EVTag-Py-v0-SHA512: {calc_evtag_csum}")  # noqa: T201
     elif args.sign and in_tag:
-        sign_tree_checksum(repo, in_tag, calc_evtag_csum, args.compat)
+        if args.tag_message:
+            sign_tree_checksum(
+                repo, in_tag, calc_evtag_csum, args.compat, tag_msg=args.tag_message
+            )
+        elif args.tag_message_file:
+            sign_tree_checksum(
+                repo,
+                in_tag,
+                calc_evtag_csum,
+                args.compat,
+                tag_msg_file=args.tag_message_file,
+            )
+        else:
+            sign_tree_checksum(repo, in_tag, calc_evtag_csum, args.compat)
     elif (
         args.verify
         and in_tag
