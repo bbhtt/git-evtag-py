@@ -10,6 +10,13 @@ readme = "README.md"
 requires-python = "<4.0,>=3.10"
 dependencies = []
 
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+git-evtag = "git_evtag_py:main"
+
 [project.urls]
 Homepage = "https://github.com/bbhtt/git-evtag-py"
 Repository = "https://github.com/bbhtt/git-evtag-py.git"
