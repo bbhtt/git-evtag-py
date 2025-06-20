@@ -46,15 +46,11 @@ git evtag --sign TAG -m "Tag Message"
 # checksum to it. Uses the message from the file 'FILE' as the tag
 # message
 git evtag --sign TAG -F FILE
-
-# Produces 'Git-EVTag-v0-SHA512' prefixed output
-git evtag --compat
-git evtag --compat --sign TAG
 ```
 
 ```sh
 $ git evtag -h
-usage: git-evtag [-h] [--rev REV] [--repo REPO] [--verify VERIFY] [--sign SIGN] [--compat] [-m TAG_MESSAGE | -F TAG_MESSAGE_FILE]
+usage: git-evtag [-h] [--rev REV] [--repo REPO] [--verify VERIFY] [--sign SIGN] [-m TAG_MESSAGE | -F TAG_MESSAGE_FILE]
 
 EVTag checksum of a git repository
 
@@ -63,8 +59,7 @@ options:
   --rev REV             Git revision (default: HEAD)
   --repo REPO           Path to the git repository (default: PWD)
   --verify VERIFY       Verify the EVTag checksum of the input tag
-  --sign SIGN           Create a signed and annotated tag and append the EVTag checksum
-  --compat              Produce 'Git-EVTag-v0-SHA512' prefixed output
+  --sign SIGN           Create a signed and annotated tag from HEAD and append the EVTag checksum
   -m, --tag-message TAG_MESSAGE
                         Use the input message as the tag message
   -F, --tag-message-file TAG_MESSAGE_FILE

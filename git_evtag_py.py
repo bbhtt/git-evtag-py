@@ -85,8 +85,6 @@ def extract_checksum_from_tag(repo: Path, tag: str) -> str | None:
         )
 
         for line in result.stdout.splitlines():
-            if line.strip().startswith("Git-EVTag-Py-v0-SHA512: "):
-                return line.split("Git-EVTag-Py-v0-SHA512: ", 1)[1].strip()
             if line.strip().startswith("Git-EVTag-v0-SHA512: "):
                 return line.split("Git-EVTag-v0-SHA512: ", 1)[1].strip()
         return None
@@ -98,7 +96,6 @@ def sign_tree_checksum(
     repo: Path,
     tag: str,
     in_csum: str,
-    compat: bool = False,
     tag_msg: str | None = None,
     tag_msg_file: Path | None = None,
 ) -> None:
@@ -134,17 +131,9 @@ def sign_tree_checksum(
             message = tmp.read()
         unlink(tmp.name)
 
-    pattern = (
-        r"\n?Git-EVTag-v0-SHA512: .*\n?"
-        if compat
-        else r"\n?Git-EVTag-Py-v0-SHA512: .*\n?"
-    )
+    pattern = r"\n?Git-EVTag-v0-SHA512: .*\n?"
     cleaned_msg = re.sub(pattern, "", message, flags=re.DOTALL).rstrip()
-    footer = (
-        f"\n\nGit-EVTag-v0-SHA512: {in_csum}\n"
-        if compat
-        else f"\n\nGit-EVTag-Py-v0-SHA512: {in_csum}\n"
-    )
+    footer = f"\n\nGit-EVTag-v0-SHA512: {in_csum}\n"
     final_msg = cleaned_msg + footer
 
     subprocess.run(
@@ -398,11 +387,6 @@ def parse_args() -> argparse.Namespace:
             "Create a signed and annotated tag from HEAD and append the EVTag checksum"
         ),
     )
-    parser.add_argument(
-        "--compat",
-        action="store_true",
-        help="Produce 'Git-EVTag-v0-SHA512' prefixed output",
-    )
     tag_msg = parser.add_mutually_exclusive_group()
     tag_msg.add_argument(
         "-m", "--tag-message", help="Use the input message as the tag message"
@@ -465,25 +449,19 @@ def main() -> int:
     calc_evtag_csum = checksum.get_digest()
 
     if not (args.verify or args.sign):
-        if args.compat:
-            print(f"Git-EVTag-v0-SHA512: {calc_evtag_csum}")  # noqa: T201
-        else:
-            print(f"Git-EVTag-Py-v0-SHA512: {calc_evtag_csum}")  # noqa: T201
+        print(f"Git-EVTag-v0-SHA512: {calc_evtag_csum}")  # noqa: T201
     elif args.sign and in_tag:
         if args.tag_message:
-            sign_tree_checksum(
-                repo, in_tag, calc_evtag_csum, args.compat, tag_msg=args.tag_message
-            )
+            sign_tree_checksum(repo, in_tag, calc_evtag_csum, tag_msg=args.tag_message)
         elif args.tag_message_file:
             sign_tree_checksum(
                 repo,
                 in_tag,
                 calc_evtag_csum,
-                args.compat,
                 tag_msg_file=args.tag_message_file,
             )
         else:
-            sign_tree_checksum(repo, in_tag, calc_evtag_csum, args.compat)
+            sign_tree_checksum(repo, in_tag, calc_evtag_csum)
     elif (
         args.verify
         and in_tag
