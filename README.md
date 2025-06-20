@@ -10,15 +10,15 @@ This can,
 - Verify the signature and the EVTag checksum of a tag
 - Sign a tag with the EVTag checksum
 
-### Usage
+### Install
 
-Install `git`.
-
-Install `git_evtag_py`
+Install `git`, then install `git_evtag_py`:
 
 ```sh
 pip install --user git+https://github.com/bbhtt/git-evtag-py.git@v1.0.7#egg=git_evtag_py
 ```
+
+### Usage
 
 ```sh
 # Show the EVTag checksum of HEAD
@@ -80,6 +80,8 @@ uv run mypy .
 ```
 
 ### Performance
+
+_Compared to the upstream Python implementation._
 
 On `torvalds/linux.git` at the `v6.15` tag:
 
