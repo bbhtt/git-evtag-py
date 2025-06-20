@@ -1,6 +1,6 @@
 [project]
 name = "git_evtag_py"
-version = "1.0.0"
+version = "1.0.4"
 description = "A python script version of git-evtag"
 authors = [
   {name = "bbhtt", email = "bbhtt@bbhtt.space"},
