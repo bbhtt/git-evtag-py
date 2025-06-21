@@ -58,3 +58,9 @@ jobs:
 
       - name: Check python types
         run: uv run mypy .
+
+      - name: Install
+        run: pip install --user --break-system-packages .
+
+      - name: Run tests
+        run: bash run_tests.sh
