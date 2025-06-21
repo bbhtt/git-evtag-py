@@ -72,6 +72,7 @@ options:
 uv run ruff format
 uv run ruff check --fix --exit-non-zero-on-fix
 uv run mypy .
+uv run pytest -vvvs
 ```
 
 ### Performance

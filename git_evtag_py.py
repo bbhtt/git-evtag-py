@@ -136,11 +136,12 @@ def sign_tree_checksum(
     footer = f"\n\nGit-EVTag-v0-SHA512: {in_csum}\n"
     final_msg = cleaned_msg + footer
 
-    subprocess.run(
-        ["git", "tag", "-a", "-s", tag, commit, "-m", final_msg],
-        check=True,
-        cwd=repo,
-    )
+    tag_args = ["git", "tag", "-a"]
+    if environ.get("EVTAG_NO_GPG_SIGN") != "true":
+        tag_args.append("-s")
+
+    tag_args.extend([tag, commit, "-m", final_msg])
+    subprocess.run(tag_args, check=True, cwd=repo)
 
 
 def is_tag_signature_valid(repo: Path, tag: str) -> bool:
