@@ -15,7 +15,7 @@ This can,
 Install `git`, then install `git_evtag_py`:
 
 ```sh
-pip install --user git+https://github.com/bbhtt/git-evtag-py.git@v1.0.8#egg=git_evtag_py
+pip install --user git+https://github.com/bbhtt/git-evtag-py.git@v1.0.9#egg=git_evtag_py
 ```
 
 ### Usage
