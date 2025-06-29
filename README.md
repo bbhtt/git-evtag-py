@@ -2,7 +2,7 @@
 
 A Python implementation of [git-evtag](https://github.com/cgwalters/git-evtag/),
 inspired by the [upstream Python implementation](https://github.com/cgwalters/git-evtag/blob/7c58b2021a066f1e552deeb37431bc70b6215d62/src/git-evtag-compute-py)
-but more feature complete and [faster](#performance).
+but [more feature complete and faster](#performance).
 
 This can,
 
