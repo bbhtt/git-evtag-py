@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: LGPL-2.0-or-later
 # Original: https://github.com/cgwalters/git-evtag/blob/main/src/git-evtag-compute-py
-# Copyright (C) 2025 bbhtt <bbhtt@bbhtt.space>
+# Copyright (C) 2025 bbhtt <bbhtt@bbhtt.in>
 # Copyright (C) 2015 Colin Walters <walters@verbum.org>
 
 import argparse

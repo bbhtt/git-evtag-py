@@ -3,7 +3,7 @@ name = "git_evtag_py"
 version = "1.0.9"
 description = "A Python implementation of git-evtag"
 authors = [
-  {name = "bbhtt", email = "bbhtt@bbhtt.space"},
+  {name = "bbhtt", email = "bbhtt@bbhtt.in"},
 ]
 license = {text = "LGPL-2.0-or-later"}
 readme = "README.md"
