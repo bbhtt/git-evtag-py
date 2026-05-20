@@ -1,6 +1,5 @@
 default_install_hook_types:
   - pre-commit
-  - pre-push
 default_stages:
   - pre-commit
 fail_fast: true
@@ -47,7 +46,7 @@ repos:
         files: \.py$
       - id: py-test
         name: pytest
-        stages: [pre-push]
-        entry: bash run_tests.sh
+        description: Run pytest
+        entry: uv run --frozen -q pytest --ff --exitfirst
         language: system
         pass_filenames: false
