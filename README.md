@@ -12,10 +12,10 @@ This can,
 
 ### Install
 
-Install `git`, then install `git_evtag_py`:
+Install `git >= 2.9.0`, then install `git_evtag_py`:
 
 ```sh
-pip install --user git+https://github.com/bbhtt/git-evtag-py.git@v1.0.9#egg=git_evtag_py
+pip install --user git+https://github.com/bbhtt/git-evtag-py.git@v2.0.0#egg=git_evtag_py
 ```
 
 ### Usage
@@ -43,27 +43,21 @@ git evtag --sign TAG
 git evtag --sign TAG -m "Tag Message"
 
 # Create a signed and annotated tag 'TAG' from HEAD and append the EVTag
-# checksum to it. Uses the message from the file 'FILE' as the tag
-# message
-git evtag --sign TAG -F FILE
+# checksum to it. Opens './TAG-FILE' for the tag message
+git evtag --sign TAG -m "./TAG-FILE"
 ```
 
 ```sh
-$ git evtag -h
-usage: git-evtag [-h] [--rev REV] [--repo REPO] [--verify VERIFY] [--sign SIGN] [-m TAG_MESSAGE | -F TAG_MESSAGE_FILE]
-
-EVTag checksum of a git repository
+git_evtag_py EVTag checksum of a git repository
 
 options:
-  -h, --help            show this help message and exit
-  --rev REV             Git revision (default: HEAD)
-  --repo REPO           Path to the git repository (default: PWD)
-  --verify VERIFY       Verify the EVTag checksum of the input tag
-  --sign SIGN           Create a signed and annotated tag from HEAD and append the EVTag checksum
-  -m, --tag-message TAG_MESSAGE
-                        Use the input message as the tag message
-  -F, --tag-message-file TAG_MESSAGE_FILE
-                        Use the message from the input file as the tag message
+  -h, --help  Show this help message and exit
+  --version   Show the version number and exit
+  --rev       Git revision (default: HEAD)
+  --repo      Path to the git repository (default: PWD)
+  --verify    Verify the EVTag checksum of the input tag
+  --sign      Create a signed and annotated tag from HEAD and append the EVTag checksum
+  --tag-msg   Use the input as the tag message, or read from a file path
 ```
 
 ### Development
@@ -77,20 +71,34 @@ uv run pytest -vvvs
 
 ### Performance
 
-_Compared to the upstream Python implementation._
+_Compared to the upstream Python and C implementation(s)._
 
 On `torvalds/linux.git` at the `v6.15` tag:
 
 ```sh
 # git_evtag_py
 
-/bin/time -p git evtag
+/bin/time -p git-evtag --in-place
+WARNING: Running in-place checksum computation for 'HEAD'
 Git-EVTag-v0-SHA512: e7e3045a3f5b8f9cc538cc37a56143918306282f7200b9c860703bc839e0a7f4c59f36313d34e6ae9b825c2f77081dfe8e2d5f50f70030271ea17161e2e2fe83
-real 14.19
-user 8.60
-sys 7.21
+real 7.68
+user 6.65
+sys 1.71
 
-# git-evtag-compute-py
+## Average for 10 runs
+
+real 7.78
+user 6.72
+sys  1.76
+
+/bin/time -p git-evtag
+INFO: Cloning repository to a temporary directory to checkout 'HEAD'
+Git-EVTag-v0-SHA512: e7e3045a3f5b8f9cc538cc37a56143918306282f7200b9c860703bc839e0a7f4c59f36313d34e6ae9b825c2f77081dfe8e2d5f50f70030271ea17161e2e2fe83
+real 26.19
+user 11.94
+sys 10.09
+
+# git-evtag-compute-py (Upstream Python implementation)
 
 /bin/time -p git-evtag-compute-py HEAD
 # git-evtag comment: submodules=0 commits=1 (262) trees=5895 (3908050) blobs=88843 (1510695775)
@@ -98,25 +106,19 @@ Git-EVTag-v0-SHA512: e7e3045a3f5b8f9cc538cc37a56143918306282f7200b9c860703bc839e
 real 152.06
 user 46.40
 sys 111.18
-```
 
-On `mesa/mesa.git` at the `mesa-25.0.0` tag:
+# git-evtag (Upstream C implementation)
 
-```sh
-# git_evtag_py
+/bin/time -p git-evtag sign --print-only v6.15
+# git-evtag comment: submodules=0 commits=1 (262) trees=5895 (3908050) blobs=88843 (1510695775)
+Git-EVTag-v0-SHA512: e7e3045a3f5b8f9cc538cc37a56143918306282f7200b9c860703bc839e0a7f4c59f36313d34e6ae9b825c2f77081dfe8e2d5f50f70030271ea17161e2e2fe83
+real 8.65
+user 8.22
+sys 0.39
 
-/bin/time -p git evtag
-Git-EVTag-v0-SHA512: b7a88cbca3c1257855404ab6f16b9efaf1e9b9304f46ad45a5d1a283808e40a96011e9321f0c6a8aacfe3a1be9c3cb971b9169ba21bd1d2ccfeb52041da0475b
-real 1.93
-user 1.02
-sys 1.06
+## Average for 10 runs
 
-# git-evtag-compute-py
-
-/bin/time -p git-evtag-compute-py HEAD
-# git-evtag comment: submodules=0 commits=1 (252) trees=714 (510170) blobs=10970 (283895423)
-Git-EVTag-v0-SHA512: b7a88cbca3c1257855404ab6f16b9efaf1e9b9304f46ad45a5d1a283808e40a96011e9321f0c6a8aacfe3a1be9c3cb971b9169ba21bd1d2ccfeb52041da0475b
-real 18.55
-user 5.83
-sys 13.45
+real 8.73
+user 8.28
+sys  0.40
 ```

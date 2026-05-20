@@ -5,12 +5,14 @@ on:
     branches: main
     paths-ignore:
       - '.gitignore'
+      - '.pre-commit-config.yaml'
       - 'LICENSE'
       - 'README.md'
   pull_request:
     branches: main
     paths-ignore:
       - '.gitignore'
+      - '.pre-commit-config.yaml'
       - 'LICENSE'
       - 'README.md'
   workflow_dispatch:
@@ -29,6 +31,10 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - name: Fetch
+        run: git fetch --all --force --tags
 
       - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
 
@@ -59,8 +65,8 @@ jobs:
       - name: Check python types
         run: uv run mypy .
 
-      - name: Install
-        run: pip install --user --break-system-packages .
+      - name: Run unit tests
+        run: uv run pytest -vvv
 
-      - name: Run tests
-        run: bash run_tests.sh
+      - name: Run integration tests
+        run: uv run pytest -vvv -m integration
